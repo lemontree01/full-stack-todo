@@ -1,0 +1,5 @@
+{
+  "ServerPort": "5000",
+  "DBURL": "mongodb+srv://sethacis:sethacis@online-shop.679z3.mongodb.net/mern-todo?retryWrites=true&w=majority",
+  "jwtAccessKey": "random_secret_key"
+}

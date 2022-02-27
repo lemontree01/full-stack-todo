@@ -1,5 +1,17 @@
 export interface ThemeState {
-    theme: Theme
+    theme: Theme,
+    colors: Colors
+}
+
+export interface Colors {
+    primary: string,
+    secondary: string,
+    primaryText: string,
+    secondaryText: string,
+    background: string,
+    label: string,
+    border: string,
+    shadow: string
 }
 
 export enum Theme {

@@ -4,6 +4,7 @@ const config = require('config')
 const cors = require('cors')
 
 const router = require('./routes/index.router')
+const Process = require("process");
 const app = express()
 
 app.use(cors({
@@ -14,7 +15,7 @@ app.use(cors({
 app.use(express.json())
 app.use(router)
 
-const PORT = config.get("ServerPort")
+const PORT = Process.env.PORT || config.get("ServerPort")
 const DBURL = config.get("DBURL")
 
 app.listen(PORT, async () => {

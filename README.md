@@ -2,10 +2,10 @@
 <div align="center" id="readme-top">
  
 
-  <h3 align="center">E-learning platform</h3>
+  <h3 align="center"> Планировщик задач</h3>
  
   <p align="center">
-    Планировщик задач
+   
     <br />
     <a href="https://lemontree-todo-app.netlify.app/"><strong>Открыть деплой»</strong></a>
     <br />

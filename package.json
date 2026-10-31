@@ -1,0 +1,19 @@
+{
+  "name": "full-stack-todo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "build": "npm run build -w client",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm test -w server",
+    "lint:arch": "npm run lint:arch -w client",
+    "vercel-build": "npm run generate -w server && npm run db:deploy -w server && npm run build -w client"
+  }
+}

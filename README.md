@@ -2,6 +2,8 @@
 
 A full-stack task manager: sign up, then create, edit, complete and delete your tasks. Light and dark themes, works on mobile.
 
+**Live demo: [full-stack-todo-delta.vercel.app](https://full-stack-todo-delta.vercel.app)**
+
 The point of the project is less the feature set than **how it's built**. The backend follows **Clean / Onion architecture**, the frontend follows **Feature-Sliced Design**, and automated checks enforce both, so the rules can't quietly erode.
 
 <p align="center">

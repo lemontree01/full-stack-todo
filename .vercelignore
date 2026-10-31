@@ -1,0 +1,4 @@
+# The Vercel CLI doesn't read .gitignore; keep local secrets and build artifacts out of CLI uploads.
+.env
+server/src/generated
+client/dist

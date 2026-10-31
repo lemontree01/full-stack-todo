@@ -1,6 +1,6 @@
-import type { ErrorRequestHandler } from 'express'
+import type { ErrorRequestHandler, RequestHandler } from 'express'
 import { ZodError } from 'zod'
-import { ConflictError, NotFoundError, UnauthorizedError } from '../../domain/errors.js'
+import { ConflictError, NotFoundError, UnauthorizedError } from '../../../domain/errors.js'
 
 const statusOf = (err: unknown): number | undefined => {
   if (err instanceof ZodError) return 400
@@ -9,6 +9,11 @@ const statusOf = (err: unknown): number | undefined => {
   if (err instanceof ConflictError) return 409
 }
 
+export const notFound: RequestHandler = (_req, res) => {
+  res.status(404).json({ message: 'Not found' })
+}
+
+/** Maps domain and validation errors to HTTP statuses; anything else is a logged 500. */
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   const status = statusOf(err)
   if (status) {

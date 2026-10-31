@@ -26,16 +26,31 @@ The point of the project is less the feature set than **how it's built**. The ba
 
 ## Architecture
 
-### Backend: Clean / Onion
+### Backend: Clean Architecture
 
 ```
 server/src/
-├── domain/           Entities, business rules, repository interfaces. No dependencies at all.
-├── application/      Use cases (AuthService, TodoService) and the ports they need.
-├── infrastructure/   Adapters: Prisma repositories, bcrypt, JWT, env config.
-├── presentation/     HTTP: Express routes, Zod request schemas, cookie auth, error mapping.
-└── main/             Composition root: builds the object graph and wires the layers together.
+├── domain/                   Entities, repository interfaces, domain errors. No dependencies at all.
+├── application/
+│   ├── ports.ts              Interfaces the use cases need (PasswordHasher, TokenService)
+│   ├── session.ts            Session / Me output models
+│   └── use-cases/            One class per use case, each with a single execute()
+│       ├── auth/             StartGuestSession, Register, Login, GetCurrentUser, Authenticate
+│       └── todos/            ListTodos, CreateTodo, UpdateTodo, DeleteTodo
+├── infrastructure/           Adapters for the ports: Prisma repositories, bcrypt, JWT, env config
+├── presentation/http/        Interface adapters for HTTP
+│   ├── routes/               URL → middlewares → controller method. Nothing else.
+│   ├── controllers/          Parse the request, call a use case, shape the response
+│   ├── validation/           Zod schemas for request bodies and params
+│   ├── middlewares/          requireAuth, rate limiting, error → status mapping
+│   └── session-cookie.ts     The httpOnly session cookie
+└── main/
+    ├── container.ts          Composition root: builds every repository, use case and controller
+    ├── app.ts                The Express app (used by the server, the Vercel function and tests)
+    └── server.ts             Local HTTP listener
 ```
+
+A request flows through `routes/todo.routes.ts` → `requireAuth` → `TodoController.update` → `UpdateTodoBody.parse` → `UpdateTodo.execute()` → the `TodoRepository` port → the Prisma adapter. Each step lives in its own module.
 
 **Dependency rule:** imports only point inward.
 
@@ -48,10 +63,11 @@ main ──▶ presentation ──▶ application ──▶ domain
 - `application` imports only `domain`. It has no Express, no Prisma and no npm packages.
 - `presentation` never touches `infrastructure`. It only sees use cases and domain errors.
 - `infrastructure` implements the interfaces defined by the inner layers. Prisma errors are translated into domain errors there and never leak upward.
+- `presentation/http/routes` may import only controllers and middlewares, so routes stay pure wiring.
 
-[`architecture.test.ts`](server/src/architecture.test.ts) enforces this by scanning every import and failing the test suite on a violation.
+[`architecture.test.ts`](server/src/architecture.test.ts) enforces all of this by scanning every import and failing the test suite on a violation.
 
-Business rules live in the inner layers. For example, a user can only touch their own todos: repositories scope every query by owner, and `TodoService` turns "not yours" into a `NotFoundError`, so the API never reveals that another user's todo exists.
+Business rules live in the inner layers. For example, a user can only touch their own todos: repositories scope every query by owner, and the `UpdateTodo` / `DeleteTodo` use cases turn "not yours" into a `NotFoundError`, so the API never reveals that another user's todo exists.
 
 ### Frontend: Feature-Sliced Design
 

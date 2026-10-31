@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { SESSION_TTL_SECONDS } from '../../application/auth.service.js'
+import { SESSION_TTL_SECONDS } from '../../application/session.js'
 import type { TokenService } from '../../application/ports.js'
 
 export class JwtTokenService implements TokenService {

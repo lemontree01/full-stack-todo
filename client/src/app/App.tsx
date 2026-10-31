@@ -1,6 +1,5 @@
 import { Alert, AppShell, Center, Container, Loader } from '@mantine/core'
 import { useSession } from '@/entities/session'
-import { AuthPage } from '@/pages/auth'
 import { TodosPage } from '@/pages/todos'
 import { Header } from '@/widgets/header'
 
@@ -25,7 +24,7 @@ const Content = () => {
     )
   }
 
-  return session.data ? <TodosPage /> : <AuthPage />
+  return <TodosPage />
 }
 
 export const App = () => (

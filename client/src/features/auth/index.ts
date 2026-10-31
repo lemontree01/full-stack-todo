@@ -1,2 +1,2 @@
-export { AuthForm } from './ui/AuthForm'
+export { AuthButton } from './ui/AuthButton'
 export { LogoutButton } from './ui/LogoutButton'

@@ -40,7 +40,7 @@ test('register → me → logout → login', async () => {
   const login = uniqueLogin('alice')
 
   assert.equal((await api('POST', '/auth/register', { login, password: PASSWORD })).status, 201)
-  assert.deepEqual((await api('GET', '/auth/me')).body, { login })
+  assert.deepEqual((await api('GET', '/auth/me')).body, { login, isGuest: false })
   assert.equal((await api('POST', '/auth/register', { login, password: PASSWORD })).status, 409)
 
   assert.equal((await api('POST', '/auth/logout')).status, 204)
@@ -52,7 +52,37 @@ test('register → me → logout → login', async () => {
   assert.deepEqual(wrongPassword.body, unknownLogin.body, 'responses must not reveal which logins exist')
 
   assert.equal((await api('POST', '/auth/login', { login: login.toUpperCase(), password: PASSWORD })).status, 200)
-  assert.deepEqual((await api('GET', '/auth/me')).body, { login })
+  assert.deepEqual((await api('GET', '/auth/me')).body, { login, isGuest: false })
+})
+
+test('a guest keeps their todos when signing up', async () => {
+  const guest = client()
+  assert.deepEqual((await guest('POST', '/auth/guest')).body, { login: null, isGuest: true })
+  const { body: todo } = await guest('POST', '/todos', { name: 'Made as a guest' })
+
+  // Signing up with a taken login fails and leaves both the guest and the existing account alone.
+  const taken = uniqueLogin('taken')
+  await client()('POST', '/auth/register', { login: taken, password: PASSWORD })
+  assert.equal((await guest('POST', '/auth/register', { login: taken, password: PASSWORD })).status, 409)
+  assert.deepEqual((await guest('GET', '/auth/me')).body, { login: null, isGuest: true })
+
+  const login = uniqueLogin('upgraded')
+  assert.deepEqual((await guest('POST', '/auth/register', { login, password: PASSWORD })).body, {
+    login,
+    isGuest: false,
+  })
+  assert.deepEqual((await guest('GET', '/todos')).body.map((t: { id: number }) => t.id), [todo.id])
+
+  // The new credentials work from another browser and see the same todos.
+  const elsewhere = client()
+  assert.equal((await elsewhere('POST', '/auth/login', { login, password: PASSWORD })).status, 200)
+  assert.deepEqual((await elsewhere('GET', '/todos')).body.map((t: { id: number }) => t.id), [todo.id])
+
+  // Registering again while signed in creates a separate account instead of overwriting this one.
+  const second = uniqueLogin('second')
+  assert.equal((await guest('POST', '/auth/register', { login: second, password: PASSWORD })).status, 201)
+  assert.deepEqual((await guest('GET', '/todos')).body, [])
+  assert.equal((await elsewhere('GET', '/todos')).body.length, 1)
 })
 
 test('todos require a session', async () => {

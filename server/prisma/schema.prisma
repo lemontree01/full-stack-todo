@@ -11,8 +11,9 @@ datasource db {
 
 model User {
   id           Int      @id @default(autoincrement())
-  login        String   @unique
-  passwordHash String   @map("password_hash")
+  // Both null for guest users (Postgres allows many NULLs in a unique column).
+  login        String?  @unique
+  passwordHash String?  @map("password_hash")
   createdAt    DateTime @default(now()) @map("created_at")
   todos        Todo[]
 

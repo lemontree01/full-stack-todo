@@ -1,5 +1,7 @@
 export interface User {
-  login: string
+  /** null while using the app as a guest. */
+  login: string | null
+  isGuest: boolean
 }
 
 export interface Credentials {

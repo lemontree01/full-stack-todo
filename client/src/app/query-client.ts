@@ -1,18 +1,19 @@
 import { notifications } from '@mantine/notifications'
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
-import { sessionKey } from '@/entities/session'
+import { restartSession } from '@/entities/session'
 import { ApiError } from '@/shared/api'
 
 const isUnauthorized = (error: unknown) => error instanceof ApiError && error.status === 401
 
 export const queryClient: QueryClient = new QueryClient({
-  // An expired session anywhere sends the user back to the sign-in screen.
+  // An expired session anywhere drops the user's data and continues as a fresh guest.
   queryCache: new QueryCache({
-    onError: (error) => isUnauthorized(error) && queryClient.setQueryData(sessionKey, null),
+    onError: (error) => isUnauthorized(error) && restartSession(queryClient),
   }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
-      if (isUnauthorized(error)) return queryClient.setQueryData(sessionKey, null)
+      // On sign-in forms a 401 means wrong credentials, not an expired session.
+      if (isUnauthorized(error) && !mutation.meta?.credentials) return restartSession(queryClient)
       if (!mutation.meta?.inlineError) {
         notifications.show({ color: 'red', title: 'Something went wrong', message: error.message })
       }

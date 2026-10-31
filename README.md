@@ -1,6 +1,8 @@
 # Todo
 
-A full-stack task manager: sign up, then create, edit, complete and delete your tasks. Light and dark themes, works on mobile.
+A full-stack task manager: create, edit, complete and delete your tasks. Light and dark themes, works on mobile.
+
+No sign-up wall: you start as a **guest** and can use everything immediately. When you sign up, the guest account is upgraded in place, so your tasks come with you.
 
 **Live demo: [full-stack-todo-delta.vercel.app](https://full-stack-todo-delta.vercel.app)**
 
@@ -56,7 +58,7 @@ Business rules live in the inner layers. For example, a user can only touch thei
 ```
 client/src/
 ├── app/        Entry point, providers, theme, query-client policy
-├── pages/      auth, todos
+├── pages/      todos
 ├── widgets/    header, todo-list
 ├── features/   auth, theme-toggle, todo-create, todo-edit, todo-toggle, todo-delete
 ├── entities/   session, todo         (API calls, query keys, types, presentational UI)
@@ -74,6 +76,7 @@ client/src/
 
 - **Auth:** a JWT (HS256, 7 days) is stored in an `httpOnly`, `Secure`, `SameSite=Lax` cookie, so JavaScript can't read it and an XSS bug can't steal it. Nothing is kept in `localStorage`.
 - **Authorization:** every todo query is scoped to its owner. A test checks that user B gets `404` when touching user A's todos.
+- **Guests** are ordinary users without credentials, so they get exactly the same isolation. An upgrade only ever applies to a guest account (`WHERE login IS NULL`), never to an existing account, and choosing a login that's already taken is rejected.
 - **Passwords** are hashed with bcrypt (cost 12). Login returns the same error for an unknown user and a wrong password.
 - **Validation:** every request body and URL parameter is parsed with Zod at the HTTP boundary. Bodies are limited to 10 KB.
 - **Rate limiting** applies to sign-in and sign-up.
@@ -85,10 +88,11 @@ client/src/
 
 | Method | Path | |
 |---|---|---|
-| `POST` | `/api/auth/register` | `{ login, password }` → `201 { login }` and sets the session cookie |
-| `POST` | `/api/auth/login` | `{ login, password }` → `{ login }` and sets the session cookie |
+| `POST` | `/api/auth/guest` | `201 { login: null, isGuest: true }` and sets a guest session cookie |
+| `POST` | `/api/auth/register` | `{ login, password }` → `201 { login, isGuest: false }`. If the caller is a guest, that account is upgraded and keeps its todos. |
+| `POST` | `/api/auth/login` | `{ login, password }` → `{ login, isGuest: false }` and sets the session cookie |
 | `POST` | `/api/auth/logout` | `204` and clears the cookie |
-| `GET` | `/api/auth/me` | `{ login }` or `401` |
+| `GET` | `/api/auth/me` | `{ login, isGuest }` or `401` |
 | `GET` | `/api/todos` | The current user's todos, newest first |
 | `POST` | `/api/todos` | `{ name }` → `201 Todo` |
 | `PATCH` | `/api/todos/:id` | `{ name?, isDone? }` → `Todo` |

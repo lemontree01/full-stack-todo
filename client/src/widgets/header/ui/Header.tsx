@@ -1,7 +1,7 @@
 import { Group, Text, ThemeIcon } from '@mantine/core'
 import { IconChecks } from '@tabler/icons-react'
 import { useSession } from '@/entities/session'
-import { LogoutButton } from '@/features/auth'
+import { AuthButton, LogoutButton } from '@/features/auth'
 import { ThemeToggle } from '@/features/theme-toggle'
 
 export const Header = () => {
@@ -18,13 +18,21 @@ export const Header = () => {
         </Text>
       </Group>
       <Group gap="xs" wrap="nowrap">
-        {user && (
+        {user && !user.isGuest && (
           <Text size="sm" c="dimmed" visibleFrom="xs">
             {user.login}
           </Text>
         )}
         <ThemeToggle />
-        {user && <LogoutButton />}
+        {user?.isGuest && (
+          <>
+            <AuthButton mode="login" variant="default">
+              Sign in
+            </AuthButton>
+            <AuthButton mode="register">Sign up</AuthButton>
+          </>
+        )}
+        {user && !user.isGuest && <LogoutButton />}
       </Group>
     </Group>
   )
